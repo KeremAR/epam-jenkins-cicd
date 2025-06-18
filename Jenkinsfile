@@ -5,12 +5,6 @@ pipeline {
         nodejs 'Node 7.8.0'
     }
 
-    environment {
-        APP_PORT = ''
-        DOCKER_IMAGE_NAME = ''
-        LOGO_FILE_PATH = ''
-    }
-
     stages {
         stage('Prepare Environment') {
             steps {
