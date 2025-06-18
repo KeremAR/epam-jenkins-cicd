@@ -10,14 +10,13 @@ pipeline {
             steps {
                 script {
                     def dockerhubUser = "keremar" 
+                    def dockerhubRepo = "epam-jenkins-lab"
 
                     if (env.BRANCH_NAME == 'main') {
-                        env.APP_PORT = '3000'
-                        env.DOCKER_IMAGE_NAME = "${dockerhubUser}/cicd-app:main-v1.0"
+                        env.DOCKER_IMAGE_NAME = "${dockerhubUser}/${dockerhubRepo}:main-v1.0"
                         env.LOGO_FILE_PATH = 'src/logo-main.svg'
                     } else if (env.BRANCH_NAME == 'dev') {
-                        env.APP_PORT = '3001'
-                        env.DOCKER_IMAGE_NAME = "${dockerhubUser}/cicd-app:dev-v1.0"
+                        env.DOCKER_IMAGE_NAME = "${dockerhubUser}/${dockerhubRepo}:dev-v1.0"
                         env.LOGO_FILE_PATH = 'src/logo-dev.svg'
                     }
                 }
@@ -44,25 +43,22 @@ pipeline {
                 }
             }
         }
-
-        stage('Deploy') {
-            steps {
-                script {
-                    def containerName = "app-${env.BRANCH_NAME}"
-                    sh """
-                        if [ \$(docker ps -a -q -f name=${containerName}) ]; then
-                            docker stop ${containerName}
-                            docker rm ${containerName}
-                        fi
-                    """
-                    sh "docker run -d --name ${containerName} -p ${env.APP_PORT}:3000 ${env.DOCKER_IMAGE_NAME}"
-                }
-            }
-        }
     }
     
     post {
+        success {
+            script {
+                echo "Build successful. Triggering deployment..."
+                if (env.BRANCH_NAME == 'main') {
+                    build job: 'Deploy_to_main', parameters: [string(name: 'IMAGE_TO_DEPLOY', value: env.DOCKER_IMAGE_NAME)]
+                } else if (env.BRANCH_NAME == 'dev') {
+                    build job: 'Deploy_to_dev', parameters: [string(name: 'IMAGE_TO_DEPLOY', value: env.DOCKER_IMAGE_NAME)]
+                }
+            }
+        }
+        
         always {
+            echo "Logging out from Docker Hub..."
             sh 'docker logout'
             cleanWs()
         }
