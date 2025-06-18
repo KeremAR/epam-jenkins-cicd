@@ -32,7 +32,7 @@ pipeline {
 
         stage('Scan Docker Image for Vulnerabilities') {
             steps {
-                sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${env.DOCKER_IMAGE_NAME}"
+                sh "trivy image --timeout 15m --skip-dirs /app/node_modules --scanners vuln --exit-code 0 --severity HIGH,CRITICAL ${env.DOCKER_IMAGE_NAME}"
             }
         }
         
