@@ -1,17 +1,14 @@
 pipeline {
     agent any
-
     environment {
         DOCKER_CREDS = credentials('dockerhub-credentials') 
     }
-
     stages {
         stage('Prepare Environment') {
             steps {
                 script {
                     def dockerhubUser = "keremar" 
                     def dockerhubRepo = "epam-jenkins-lab"
-
                     if (env.BRANCH_NAME == 'main') {
                         env.DOCKER_IMAGE_NAME = "${dockerhubUser}/${dockerhubRepo}:main-v1.0"
                         env.LOGO_FILE_PATH = 'src/logo-main.svg'
@@ -22,19 +19,23 @@ pipeline {
                 }
             }
         }
-        
         stage('Change Logo') {
             steps {
                 sh "cp -f ${env.LOGO_FILE_PATH} src/logo.svg"
             }
         }
-
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t ${env.DOCKER_IMAGE_NAME} ."
             }
         }
 
+        stage('Scan Docker Image for Vulnerabilities') {
+            steps {
+                sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${env.DOCKER_IMAGE_NAME}"
+            }
+        }
+        
         stage('Push to Docker Hub') {
             steps {
                 script {
@@ -44,19 +45,17 @@ pipeline {
             }
         }
     }
-    
     post {
         success {
             script {
                 echo "Build successful. Triggering deployment..."
                 if (env.BRANCH_NAME == 'main') {
-                    build job: 'Deploy_to_main', wait: false,  parameters: [string(name: 'IMAGE_TO_DEPLOY', value: env.DOCKER_IMAGE_NAME)]
+                    build job: 'Deploy_to_main', wait: false, parameters: [string(name: 'IMAGE_TO_DEPLOY', value: env.DOCKER_IMAGE_NAME)]
                 } else if (env.BRANCH_NAME == 'dev') {
                     build job: 'Deploy_to_dev', wait: false, parameters: [string(name: 'IMAGE_TO_DEPLOY', value: env.DOCKER_IMAGE_NAME)]
                 }
             }
         }
-        
         always {
             echo "Logging out from Docker Hub..."
             sh 'docker logout'
