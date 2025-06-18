@@ -50,9 +50,9 @@ pipeline {
             script {
                 echo "Build successful. Triggering deployment..."
                 if (env.BRANCH_NAME == 'main') {
-                    build job: 'Deploy_to_main', parameters: [string(name: 'IMAGE_TO_DEPLOY', value: env.DOCKER_IMAGE_NAME)]
+                    build job: 'Deploy_to_main', wait: false,  parameters: [string(name: 'IMAGE_TO_DEPLOY', value: env.DOCKER_IMAGE_NAME)]
                 } else if (env.BRANCH_NAME == 'dev') {
-                    build job: 'Deploy_to_dev', parameters: [string(name: 'IMAGE_TO_DEPLOY', value: env.DOCKER_IMAGE_NAME)]
+                    build job: 'Deploy_to_dev', wait: false, parameters: [string(name: 'IMAGE_TO_DEPLOY', value: env.DOCKER_IMAGE_NAME)]
                 }
             }
         }
