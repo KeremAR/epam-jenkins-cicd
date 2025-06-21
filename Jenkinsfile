@@ -41,7 +41,9 @@ pipeline {
         }
 
         stage('Scan Docker Image for Vulnerabilities') {
+
             steps {
+                sh "echo 'Clearing Trivy cache to prevent corruption issues...' && rm -rf /var/lib/jenkins/.cache/trivy"
                 sh "trivy image --timeout 15m --skip-dirs /app/node_modules --scanners vuln --exit-code 0 --severity HIGH,CRITICAL ${env.DOCKER_IMAGE_NAME}"
             }
         }
