@@ -7,18 +7,10 @@ pipeline {
         DOCKER_CREDS   = credentials('dockerhub-credentials')
 
         DOCKER_IMAGE_NAME = script {
-            if (env.BRANCH_NAME == 'main') {
-                return "${DOCKERHUB_USER}/${DOCKERHUB_REPO}:main-v1.0"
-            } else {
-                return "${DOCKERHUB_USER}/${DOCKERHUB_REPO}:dev-v1.0"
-            }
+            return (env.BRANCH_NAME == 'main') ? "${DOCKERHUB_USER}/${DOCKERHUB_REPO}:main-v1.0" : "${DOCKERHUB_USER}/${DOCKERHUB_REPO}:dev-v1.0"
         }
         LOGO_FILE_PATH = script {
-            if (env.BRANCH_NAME == 'main') {
-                return 'src/logo-main.svg'
-            } else {
-                return 'src/logo-dev.svg'
-            }
+            return (env.BRANCH_NAME == 'main') ? 'src/logo-main.svg' : 'src/logo-dev.svg'
         }
     }
 
@@ -69,4 +61,4 @@ pipeline {
             cleanWs()
         }
     }
-}
+} 
