@@ -1,13 +1,24 @@
-    FROM node:7.8.0
+FROM node:16-alpine as builder
 
-    WORKDIR /app
+WORKDIR /app
 
-    COPY package.json ./
+ARG LOGO_FILE=src/logo.svg
 
-    RUN npm install
+COPY package*.json ./
 
-    COPY . .
+RUN npm install
 
-    EXPOSE 3000
+COPY . .
 
-    ENTRYPOINT ["npm", "start"]
+COPY ${LOGO_FILE} src/logo.svg
+
+RUN npm run build
+
+FROM nginx:1.21-alpine
+
+COPY --from=builder /app/build /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
+
